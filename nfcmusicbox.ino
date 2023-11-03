@@ -1,23 +1,25 @@
+#include "config.h"
 
 // Wifi stuff
-const char *ssid = "";
-const char *password = "";
+const char *ssid = WIFI_SSID;
+const char *password = WIFI_PASSWORD;
 
 
 
 // mDNS name, to access to WebServer. (Only compatible in Linux, Macox, iOS...)
-const char *mDNShostname = "musicbox";
+const char *mDNShostname = MDNS_HOSTNAME;
 
-//https://github.com/fabestine1/MyThing/blob/main/ftg-main-master/Arduino/libraries/NDEF/Ndef.h
+//@todo usar esta librería mejor https://github.com/TheNitek/NDEF
 #include "MifareUltralight.h"
 
-//https://github.com/miguelbalboa/rfid
+//By Miki Balboa https://github.com/miguelbalboa/rfid
 #include <MFRC522.h>
 
 #include <SPI.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <WebServer.h>
+
 
 // WebSockets By Markus Sattler https://github.com/Links2004/arduinoWebSockets
 #include <WebSocketsServer.h>
@@ -61,6 +63,13 @@ String mediatype;
 String itemid;
 
 
+  //Client for logs
+#include <HTTPClient.h>
+HTTPClient httpLogs;
+String logHost = "http://n8nhome.tonicastillo.com/webhook/musicboxlog";
+//const char* logFingerprint = "64 06 8D FD ED 73 79 80 5A A0 15 DF 34 A7 7F FF A4 9A 68 E2";
+
+
 void setup()
 {
   Serial.begin(115200); // Initialize serial communications with the PC
@@ -89,7 +98,10 @@ void setup()
 
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
+
+  
 }
+
 
 void loop()
 {
@@ -149,13 +161,15 @@ void loop()
 
         l("ownClearQueue");
         ownClearQueue();
-        // ownChangeOutput();
+        ownDisableShuffle();
         l("ownAddItemFromLibrary");
         l(getMediatype);
         l(getItemId);
         ownAddItemFromLibrary(getMediatype, getItemId);
         l("ownPlay");
         ownPlay();
+        ownChangeOutput();
+
         l("END");
       }
       else
@@ -203,12 +217,14 @@ void loop()
 void l(String msg)
 {
   Serial.println(msg);
+  webhooklog(msg);
   webSocketSendMsg(msg, false);
 }
 
 void lError(String msg)
 {
   Serial.println(msg);
+  webhooklog(msg);
   webSocketSendMsg(msg, true);
 }
 
@@ -263,4 +279,40 @@ void handle_root()
 }
 
 
+void webhooklog(String msg)
+{
+  Serial.println("webhooklog!");
+  if(WiFi.status()== WL_CONNECTED){
+    
 
+
+    httpLogs.begin(logHost + "?msg="+msg);
+    Serial.println(logHost);
+    int statusCode = httpLogs.POST("From MusicBox");
+    Serial.println("{\"msg\": \""+ msg +"\"}");
+  if (statusCode > 0)
+  {
+    if (statusCode == HTTP_CODE_OK)
+    {
+      Serial.println("Connected to server!");// l("Server responded with HTTP status 200.\n");
+    }
+    else
+    {
+      Serial.println("No se conecta, leches!");
+      Serial.printf("Got HTTP status: %d", statusCode);
+    }
+  }
+  else
+  {
+   Serial.println("No se conecta, lechon!");
+    //Serial.printf("Error occurred while sending HTTP Get: %s\n", http.errorToString(statusCode).c_str());
+  }
+  // l(" \n ownAddItemFromLibrary end \n ");
+        httpLogs.end();
+        
+        
+
+
+  }
+  
+}
