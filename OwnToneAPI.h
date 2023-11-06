@@ -1,14 +1,15 @@
+#include "config.h"
+
 #ifndef OwnToneAPI_h
 #define OwnToneAPI_h
-
 // This one for make API Requests
 #include <HTTPClient.h>
 
 // OwnTone stuff
-String owntoneapi = "http://192.168.1.151:3689";
-const char *owntoneusername = "admin";
-const char *owntonepassword = "Toni3d";
-const char *owntonespeaker = "175525119465970";
+String owntoneapi = OWNTONE_API_URL;
+const char *owntoneusername = OWNTONE_API_USERNAME;
+const char *owntonepassword = OWNTONE_API_PASSWORD;
+const char *owntonespeaker = OWNTONE_API_SPEAKER;
 HTTPClient http;
 void ownClearQueue()
 {

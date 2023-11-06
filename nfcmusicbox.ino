@@ -57,6 +57,7 @@ WebServer server(80);
 #define RST_PIN 27
 using namespace ndef_mfrc522;
 MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522 instance
+MFRC522::MIFARE_Key key;
 
 NdefMessage message = NdefMessage();
 String mediatype;
@@ -217,15 +218,16 @@ void loop()
 void l(String msg)
 {
   Serial.println(msg);
-  webhooklog(msg);
-  webSocketSendMsg(msg, false);
+  //webhooklog(msg);
+  //webSocketSendMsg(msg, false);
 }
 
 void lError(String msg)
 {
+  Serial.println("--ERROR--");
   Serial.println(msg);
-  webhooklog(msg);
-  webSocketSendMsg(msg, true);
+  //webhooklog(msg);
+  //webSocketSendMsg(msg, true);
 }
 
 void webSocketSendMsg(String msg, bool isError)
